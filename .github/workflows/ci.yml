@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install ruff && ruff check src/ tests/
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[dev]" aiosqlite
+      - run: pytest tests/ -v --tb=short
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          ANTHROPIC_API_KEY: test-key
+          BASE_RPC_URL: https://mainnet.base.org
+          NWO_IDENTITY_REGISTRY: "0x78455AFd5E5088F8B5fecA0523291A75De1dAfF8"
+          NWO_PAYMENT_PROCESSOR: "0x4afa4618bb992a073dbcfbddd6d1aebc3d5abd7c"
+          SETTLEMENT_MIN_CREDITS: "50"
+          SETTLEMENT_ETH_PER_CREDIT: "0.0001"
+          LOG_LEVEL: WARNING
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t nwo-market-layer6:test .

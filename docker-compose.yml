@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  market-layer6:
+    build: .
+    ports:
+      - "8006:8006"
+    env_file: .env
+    environment:
+      API_PORT: "8006"
+      DATABASE_URL: sqlite+aiosqlite:///./data/market.db
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
